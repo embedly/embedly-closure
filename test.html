@@ -6,32 +6,32 @@
         <script type="text/javascript">
           (function() {
             window.embedlyOnLoad = function() {
-              var api = new embedly.Api({host: 'http://localhost:8001', key: 'internal'});
-              api.call({
-                  endpoint: 'oembed'
-                , urls: [
-                    'http://www.youtube.com/watch?v=ZNw46j0nNOs&feature=fvwrel'
-                  , 'http://www.youtube.com/watch?v=cgnhxfzOK4Y&feature=rec-LGOUT-exp_stronger_r2-2r-29-HM'
-                  ]
-                , complete: function(objs) {
-                    console.log('complete');
-                    console.log(objs);
+              var api = new embedly.Api()
+              api.call(
+                  'oembed'
+                , {urls: [
+                        'http://www.youtube.com/watch?v=ZNw46j0nNOs&feature=fvwrel'
+                      , 'http://www.youtube.com/watch?v=cgnhxfzOK4Y&feature=rec-LGOUT-exp_stronger_r2-2r-29-HM'
+                      , 'http://www.youtube.com/watch?v=dBi7zwjp20E&feature=feedf'
+                      ]
                   }
-                , error: function() {
-                    console.log('error');
-                    console.log(arguments);
+                , function(objs) {
+                    console.log('complete')
+                    console.log(objs)
                   }
-              });
+                , function(params) {
+                    console.log('error')
+                    console.log(params)
+                  }
+              );
             }
 
-            console.log('window.embedlyOnLoad exists');
-
-            var e = document.createElement('script');
-            e.type = 'text/javascript';
-            e.async = true;
-            e.src = 'embedly.min.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(e, s);
+            var e = document.createElement('script')
+            e.type = 'text/javascript'
+            e.async = true
+            e.src = 'embedly.min.js'
+            var s = document.getElementsByTagName('script')[0]
+            s.parentNode.insertBefore(e, s)
           })()
         </script>
     </body>
