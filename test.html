@@ -3,6 +3,9 @@
         <title>Embedly Test</title>
     </head>
     <body>
+        <p>This page is an example of loading the embedly lib asyncronously.  
+        The only output is to the console.</p>
+
         <script type="text/javascript">
           (function() {
             window.embedlyOnLoad = function() {
@@ -16,12 +19,10 @@
                       ]
                   }
                 , function(objs) {
-                    console.log('complete')
                     console.log(objs)
                   }
                 , function(params) {
-                    console.log('error')
-                    console.log(params)
+                    console.error(params)
                   }
               );
             }
