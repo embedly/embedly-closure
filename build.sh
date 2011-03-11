@@ -4,7 +4,7 @@ CLOSURE_LIB="../closure-library"
 CLOSURE_COMPILER="../closure-compiler"
 
 python "${CLOSURE_LIB}/closure/bin/build/closurebuilder.py" \
-  --namespace embedly.Api \
+  --namespace embedly.exports \
   --root . \
   --root "${CLOSURE_LIB}" \
   -o compiled \

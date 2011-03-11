@@ -74,14 +74,3 @@ embedly.Api.prototype.call = function(endpoint, params, resultCallback, opt_erro
       }
   )
 }
-
-/**
- * The following is only needed if you are using this library outside of
- * closure-library as a general purpose lib.
- */
-goog.exportSymbol('embedly.Api', embedly.Api)
-goog.exportProperty(embedly.Api.prototype, 'call', embedly.Api.prototype.call)
-
-if (typeof(embedlyOnLoad) == 'function') {
-  embedlyOnLoad()
-}
