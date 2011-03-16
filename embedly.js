@@ -31,7 +31,10 @@ embedly.Api = function(args) {
     , 'objectify': '/2/objectify'
     , 'preview': '/1/preview'
   }
+  var This = this
   this.timeout = args['timeout'] || 120000
+  //this.services_regex = new Array()
+  //this.rejects = new Array()
 }
 
 /**
@@ -55,17 +58,80 @@ embedly.Api = function(args) {
  * @param {Function=} opt_errorCallback Callback function expecting one
  *     argument.  Usually this is called on a timeout error.
  */
+
+embedly.Api.prototype.services = function(objs) {
+  if(!objs) {
+  var fetch_service_regex = new goog.net.Jsonp('http://api.embed.ly/1/services/javascript')
+  fetch_service_regex.send({}, this.services)
+  } else {
+    console.log(this);
+    console.log(This);
+    //this = This;
+    _services = new Array();
+    for (obj in objs) _services = _services.concat(objs[obj]['regex']); 
+    This.services_regex = _services.join('|')
+    console.log('this is the services regex string', This.params['urls'])
+    for (each in This.params['urls']) {
+      console.log(This.params['urls'][each])
+      if(!This.params['urls'][each].match(This.services_regex)) { 
+        console.log(This.params['urls'][each])
+        This.rejects.push({"url": This.params['urls'][each], "error_code": 401, "error_message": "This service requires an Embedly Pro account", "type": "error", "version": "1.0"});
+        delete This.params['urls'][each];
+        console.log('qwert', This.rejects)
+      }
+    }
+    This.call('oembed', This.params, This.resultCallback, This.opt_errorCallback)
+  }  
+}
+
+/*
+ *
+ *     
+ * 
+    for (each in params['urls']) {
+      console.log(params['urls'][each])
+      if(!params['urls'][each].match(this.services_regex)) { 
+        console.log(params['urls'][each])
+        _rejects.push({"url": params['urls'][each], "error_code": 401, "error_message": "This service requires an Embedly Pro account", "type": "error", "version": "1.0"});
+        //delete params['urls'][each];
+        console.log('rejected url ',_rejects)
+      } else
+        _params['urls'][each] = params['urls'][each] 
+      
+    };
+    this.rejects = _rejects
+    console.log('urlsssss', _params['urls']); 
+    this.call('oembed', params, resultCallback, opt_errorCallback);
+ * 
+ * 
+ * 
+ */
+
 embedly.Api.prototype.call = function(endpoint, params, resultCallback, opt_errorCallback) {
+  console.log(params)
+  console.log(this)
+  this.params = params
+  this.resultCallback = resultCallback 
+  this.opt_errorCallback = opt_errorCallback
+  
   var path = this.paths[endpoint]
   var jsonp = new goog.net.Jsonp(this.host+path)
   jsonp.setRequestTimeout(this.timeout)
+  
   if (!params['key'] && this['key']) {
     params['key'] = this.key
   }
+  
+  if(!params['key']) {
+  console.log(this.params)
+    this.services() 
+  } else {
   jsonp.send(
       params
     , function(objs) {
-        resultCallback(objs)
+      if(this.rejects)
+        objs = objs.push(this.rejects)
+      resultCallback(objs)
       }
     , function(payload) {
         if (opt_errorCallback) {
@@ -73,4 +139,5 @@ embedly.Api.prototype.call = function(endpoint, params, resultCallback, opt_erro
         }
       }
   )
+  }
 }
