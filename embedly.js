@@ -31,10 +31,7 @@ embedly.Api = function(args) {
     , 'objectify': '/2/objectify'
     , 'preview': '/1/preview'
   }
-  var This = this
   this.timeout = args['timeout'] || 120000
-  //this.services_regex = new Array()
-  //this.rejects = new Array()
 }
 
 /**
@@ -59,61 +56,40 @@ embedly.Api = function(args) {
  *     argument.  Usually this is called on a timeout error.
  */
 
-embedly.Api.prototype.services = function(objs) {
-  if(!objs) {
-  var fetch_service_regex = new goog.net.Jsonp('http://api.embed.ly/1/services/javascript')
-  fetch_service_regex.send({}, this.services)
-  } else {
-    console.log(this);
-    console.log(This);
-    //this = This;
-    _services = new Array();
-    for (obj in objs) _services = _services.concat(objs[obj]['regex']); 
-    This.services_regex = _services.join('|')
-    console.log('this is the services regex string', This.params['urls'])
-    for (each in This.params['urls']) {
-      console.log(This.params['urls'][each])
-      if(!This.params['urls'][each].match(This.services_regex)) { 
-        console.log(This.params['urls'][each])
-        This.rejects.push({"url": This.params['urls'][each], "error_code": 401, "error_message": "This service requires an Embedly Pro account", "type": "error", "version": "1.0"});
-        delete This.params['urls'][each];
-        console.log('qwert', This.rejects)
+embedly.Api.prototype.services = function(regex, params, resultCallback, opt_errorCallback, jsonp) {
+  rejects = new Array()
+  new_params_urls = new Array()
+  for (each in params['urls']) {
+    if(!params['urls'][each].match(regex)) { 
+      rejects.push({"url": params['urls'][each], "error_code": 401, "error_message": "This service requires an Embedly Pro account", "type": "error", "version": "1.0"})
+    } else
+      new_params_urls.push(params['urls'][each])
+  }
+  params['urls'] = new_params_urls
+  jsonp.send(
+    params
+  , function(objs) {
+      objs = objs.concat(rejects)
+      resultCallback(objs)
+    }
+  , function(payload) {
+      if (opt_errorCallback) {
+        opt_errorCallback(payload)
       }
     }
-    This.call('oembed', This.params, This.resultCallback, This.opt_errorCallback)
-  }  
+  )
 }
 
-/*
- *
- *     
- * 
-    for (each in params['urls']) {
-      console.log(params['urls'][each])
-      if(!params['urls'][each].match(this.services_regex)) { 
-        console.log(params['urls'][each])
-        _rejects.push({"url": params['urls'][each], "error_code": 401, "error_message": "This service requires an Embedly Pro account", "type": "error", "version": "1.0"});
-        //delete params['urls'][each];
-        console.log('rejected url ',_rejects)
-      } else
-        _params['urls'][each] = params['urls'][each] 
-      
-    };
-    this.rejects = _rejects
-    console.log('urlsssss', _params['urls']); 
-    this.call('oembed', params, resultCallback, opt_errorCallback);
- * 
- * 
- * 
- */
+embedly.Api.prototype.services_regex = function(objs, params, resultCallback, opt_errorCallback, jsonp) {
+  services = new Array()
+  for (obj in objs) 
+    services = services.concat(objs[obj]['regex']); 
+  services_regex = services.join('|')
+  this.services(services_regex, params, resultCallback, opt_errorCallback, jsonp)
+}
+  
 
 embedly.Api.prototype.call = function(endpoint, params, resultCallback, opt_errorCallback) {
-  console.log(params)
-  console.log(this)
-  this.params = params
-  this.resultCallback = resultCallback 
-  this.opt_errorCallback = opt_errorCallback
-  
   var path = this.paths[endpoint]
   var jsonp = new goog.net.Jsonp(this.host+path)
   jsonp.setRequestTimeout(this.timeout)
@@ -122,22 +98,21 @@ embedly.Api.prototype.call = function(endpoint, params, resultCallback, opt_erro
     params['key'] = this.key
   }
   
-  if(!params['key']) {
-  console.log(this.params)
-    this.services() 
+  if(!params['key'] && endpoint == 'oembed') {
+    var jsonp_service = new goog.net.Jsonp('http://api.embed.ly/1/services/javascript')
+    jsonp_service.setRequestTimeout(this.timeout)
+    jsonp_service.send({}, function(objs) {this.services_regex(objs, params, resultCallback, opt_errorCallback, jsonp)})
   } else {
-  jsonp.send(
+    jsonp.send(
       params
     , function(objs) {
-      if(this.rejects)
-        objs = objs.push(this.rejects)
-      resultCallback(objs)
+        resultCallback(objs)
       }
     , function(payload) {
         if (opt_errorCallback) {
           opt_errorCallback(payload)
         }
       }
-  )
+    )
   }
 }
